@@ -1,0 +1,49 @@
+field,descr,notes,options
+PK,Primary Key,,Integer
+AGE,Age of the individual at the time of screening,,Positive Integer
+SEX,Sex of the individual,,"M,F"
+II_1,Identifying Information answer 1 ,Complete the following statement. I am answering this survey about . . .,MYSELF; MY_CHILD; ANOTHER_ADULT_CARE; OTHER
+II_2,Identifying Information answer 2 ,How many times have you received care in an emergency room (ER) over the last 12 months?,ZERO; ONE; TWO_OR_MORE
+II_3,Identifying Information answer 3 ,"Do you live in any of the following locations?*
+I live in an assisted living facility (this is a long-term care option that provides personal care support services such as meals, bathing, dressing, or medications). 
+I live in a nursing home (this is a long-term care option that provides 24 hours a day medical care that would not be possible in other housing).
+I live in a rehabilitation center or skilled nursing facility (these are centers that help a person heal after illness or injury by providing treatments like physical, occupational, or speech therapy).
+I live in an in-patient recovery program for a drug or alcohol problem.
+I live in a psychiatric facility (this is a health care facility providing treatment to those with behavioral or emotional illnesses).
+I live in a correctional facility (such as a jail, prison, detention center, or penitentiary).",YES_ONE_OF_THE_ABOVE; NONE_OF_THE_ABOVE
+CN_HS_1,Core Need - Living Situation answer 1,What is your living situation today?,STDY_HSNG; HSNG_UNSURE; NO_STDY_HSNG
+CN_HS_2_*,,If all CN_HS_2_* are NULL then the screener omitted the question.,
+CN_HS_2_BUG_INFESTATION,Core Need - Living Situation answer 2,"Think about the place you live. Do you have problems with BUG_INFESTATION, NULL","0,1,NULL (1=YES, 0=NO)"
+CN_HS_2_MOLD,Core Need - Living Situation answer 2,"Think about the place you live. Do you have problems with MOLD, NULL","0,1,NULL (1=YES, 0=NO)"
+CN_HS_2_LEAD_PAINT_PIPES,Core Need - Living Situation answer 2,"Think about the place you live. Do you have problems with LEAD_PAINT_PIPES, NULL","0,1,NULL (1=YES, 0=NO)"
+CN_HS_2_INADQ_HEAT,Core Need - Living Situation answer 2,"Think about the place you live. Do you have problems with INADQ_HEAT, NULL","0,1,NULL (1=YES, 0=NO)"
+CN_HS_2_OVEN_NOT_WKG,Core Need - Living Situation answer 2,"Think about the place you live. Do you have problems with OVEN_NOT_WKG, NULL","0,1,NULL (1=YES, 0=NO)"
+CN_HS_2_SMOKE_DET_NOT_WKG,Core Need - Living Situation answer 2,"Think about the place you live. Do you have problems with SMOKE_DET_NOT_WKG, NULL","0,1,NULL (1=YES, 0=NO)"
+CN_HS_2_WATER_LEAKS,Core Need - Living Situation answer 2,"Think about the place you live. Do you have problems with WATER_LEAKS, NULL","0,1,NULL (1=YES, 0=NO)"
+CN_HS_2_NONE_OF_THE_ABOVE,Core Need - Living Situation answer 2,"Think about the place you live. Do you have problems with NONE_OF_THE_ABOVE, NULL","0,1,NULL (1=YES, 0=NO)"
+CN_FD_1,Core Need - Food answer 1,"Within the past 12 months, you worried that your food would run out before you got money to buy more.",OFTEN_TRUE; SMTM_TRUE; NEVER_TRUE
+CN_FD_2,Core Need - Food answer 2,"Within the past 12 months, the food you bought just didn''t last and you didn''t have money to get more.",OFTEN_TRUE; SMTM_TRUE; NEVER_TRUE
+CN_TR_1,Core Need - Transportation answer 1,"In the past 12 months, has lack of transportation kept you from medical appointments, meetings, work or from getting things needed for daily living?",YES; NO
+CN_UT_1,Core Need - Utilities answer 1,"In the past 12 months has the electric, gas, oil, or water company threatened to shut off services in your home?",YES; NO; ALRD_SHUT_OFF
+CN_SF_1,Core Need - Safety answer 1,"How often does anyone, including family, physically hurt you?",NEVER; RARELY; SOMETIMES; FRLY_OFTN; FREQUENTLY 
+CN_SF_2,Core Need - Safety answer 2,"How often does anyone, including family, insult or talk down to you?",NEVER; RARELY; SOMETIMES; FRLY_OFTN; FREQUENTLY
+CN_SF_3,Core Need - Safety answer 3,"How often does anyone, including family, threaten you with harm?",NEVER; RARELY; SOMETIMES; FRLY_OFTN; FREQUENTLY
+CN_SF_4,Core Need - Safety answer 4,"How often does anyone, including family, scream or curse at you?",NEVER; RARELY; SOMETIMES; FRLY_OFTN; FREQUENTLY
+SN_FF_2,Supplemental Need - Family & Community Support answer 2,How often do you feel lonely or isolated from those around you?,NEVER; RARELY; SOMETIMES; FRLY_OFTN; ALWAYS
+TM_1,Tell Me About Yourself answer 1,,MALE; FEMALE
+TM_2_*,,If all TM_2_* are null then the screener omitted the question.,
+TM_2_NO_HISP_LAT_ORGN,Tell Me About Yourself answer 2,"Are you hispanic, latino/a, or of spanish origin? NO_HISP_LAT_ORGN",
+TM_2_YES_MEX_AM_CHICANO_ORGN,Tell Me About Yourself answer 2,"Are you hispanic, latino/a, or of spanish origin? YES_MEX_AM_CHICANO_ORGN","0,1,NULL (1=YES, 0=NO)"
+TM_2_YES_PUERTO_RICAN,Tell Me About Yourself answer 2,"Are you hispanic, latino/a, or of spanish origin? YES_PUERTO_RICAN","0,1,NULL (1=YES, 0=NO)"
+TM_2_YES_CUBAN_ORIGIN,Tell Me About Yourself answer 2,"Are you hispanic, latino/a, or of spanish origin? YES_CUBAN_ORIGIN","0,1,NULL (1=YES, 0=NO)"
+TM_2_YES_ANTHR_HISP_LAT_SPN_ORIGIN,Tell Me About Yourself answer 2,"Are you hispanic, latino/a, or of spanish origin? YES_ANTHR_HISP_LAT_SPN_ORIGIN","0,1,NULL (1=YES, 0=NO)"
+TM_3_*,,If all TM_3_* are null then the screener omitted the question.,
+TM_3_AMRCN_INDN_ALSK_NTV,Tell Me About Yourself answer 3,Which one or more of the following would you say is your race?  AMRCN_INDN_ALSK_NTV,"0,1,NULL (1=YES, 0=NO)"
+TM_3_ASIAN,Tell Me About Yourself answer 3,Which one or more of the following would you say is your race?  ASIAN,"0,1,NULL (1=YES, 0=NO)"
+TM_3_BLCK_AFRCN_AMRCN,Tell Me About Yourself answer 3,Which one or more of the following would you say is your race?  BLCK_AFRCN_AMRCN,"0,1,NULL (1=YES, 0=NO)"
+TM_3_HWAN_OTHER_PCFC_ISLANDER,Tell Me About Yourself answer 3,Which one or more of the following would you say is your race?  HWAN_OTHER_PCFC_ISLANDER,"0,1,NULL (1=YES, 0=NO)"
+TM_3_WHITE,Tell Me About Yourself answer 3,Which one or more of the following would you say is your race?  WHITE,"0,1,NULL (1=YES, 0=NO)"
+TM_3_OTHER,Tell Me About Yourself answer 3,Which one or more of the following would you say is your race?  OTHER,"0,1,NULL (1=YES, 0=NO)"
+TM_4,Tell Me About Yourself answer 4,What is the highest grade or year of school you completed?,"NVR_ATTND_SCHL; GRD_1_8; GRD_9_11; GRD_12_HGH_SCHL; CLG_1_3; CLG_4,NULL"
+TM_5,Tell Me About Yourself answer 5,How many people do you currently live with?,
+TM_6,Tell Me About Yourself answer 6,What is your annual household income from all sources?,LESS_THN_10K; MORE_THN_10_LESS_THEN_15K; MORE_THN_15_LESS_THEN_20K; MORE_THN_20_LESS_THEN_25K; MORE_THN_25_LESS_THEN_35K; MORE_THN_35_LESS_THEN_50K; MORE_THN_50_LESS_THEN_75K; MORE_THN_75K

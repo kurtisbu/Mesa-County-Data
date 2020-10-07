@@ -1,0 +1,90 @@
+---
+title: "Interview Presentation"
+author: "Kurtis Bulock"
+date: "10/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+
+#Input Data
+dat <- read.csv("interview_data.csv")
+
+#Format Data
+dat <- dat %>% 
+  mutate(Age_Description = ifelse(age < 18, "Child", ifelse(age >= 18, "Adult",0)))
+
+#Create function to format data
+factorise <- factorise <- function(x) {
+  case_when(x %in% c("NEVER", "NEVER_TRUE", "ZERO") ~ 0,
+            x %in% c("RARELY", "SMTM_TRUE", "ONE") ~ 1,
+            x %in% c("SOMETIMES", "OFTEN_TRUE", "TWO_OR_MORE") ~ 2,
+            x %in% c("FRLY_OFTN") ~ 3,
+            x %in% c("FREQUENTLY","ALWAYS") ~ 4)
+}
+
+#Apply scale to each row
+dat$ii_2 <- sapply(dat$ii_2,factorise)
+dat$sn_ff_2 <- sapply(dat$sn_ff_2 ,factorise)
+dat$cn_sf_1 <- sapply(dat$cn_sf_1 ,factorise)
+dat$cn_sf_2 <- sapply(dat$cn_sf_2 ,factorise)
+dat$cn_sf_3 <- sapply(dat$cn_sf_3 ,factorise)
+dat$cn_sf_4 <- sapply(dat$cn_sf_4 ,factorise)
+  
+#set Levels for Wealth
+dat$tm_6 <- factor(dat$tm_6, levels = c("LESS_THN_10K", 
+                                        "MORE_THN_10_LESS_THEN_15K", 
+                                        "MORE_THN_15_LESS_THEN_20K", 
+                                        "MORE_THN_20_LESS_THEN_25K", 
+                                        "MORE_THN_25_LESS_THEN_35K", 
+                                        "MORE_THN_35_LESS_THEN_50K",  
+                                        "MORE_THN_50_LESS_THEN_75K", 
+                                        "MORE_THN_75K"))  
+
+```
+
+## Mesa County Public Health Data Exploration
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars, include=TRUE, echo= FALSE}
+dat %>% 
+  select(tm_6, 
+         cn_hs_2_bug_infestation,
+         cn_hs_2_mold, 
+         cn_hs_2_lead_paint_pipes, 
+         cn_hs_2_inadq_heat, 
+         cn_hs_2_oven_not_wkg, 
+         cn_hs_2_smoke_det_not_wkg,
+         cn_hs_2_water_leaks, 
+         age, 
+         sex) %>% 
+  mutate(Danger = cn_hs_2_bug_infestation +
+           cn_hs_2_mold + 
+           cn_hs_2_lead_paint_pipes + 
+           cn_hs_2_inadq_heat + 
+           cn_hs_2_oven_not_wkg +
+           cn_hs_2_smoke_det_not_wkg +
+           cn_hs_2_water_leaks) %>% 
+  filter(Danger != 0, tm_6  != is.na(tm_6), age >= 18, sex != "") %>% 
+  ggplot(aes(x = tm_6,
+             y = Danger,
+             #color = as.factor(age)
+             )) +
+  geom_point() + 
+  geom_jitter(height = .1, width = .15)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

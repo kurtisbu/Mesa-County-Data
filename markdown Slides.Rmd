@@ -1,0 +1,582 @@
+---
+title: "Exploratory Analysis of Mesa County Public Health"
+author: "Kurtis Bulock"
+date: "10/2/2020"
+output: slidy_presentation 
+theme: readable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(kableExtra)
+
+
+getwd()
+dat <- read.csv("interview_data.csv")
+head(dat)
+str(dat)
+
+#Create column to differentiate between adult and child
+dat <- dat %>% 
+  mutate(Age_Description = ifelse(age < 18, "Child", ifelse(age >= 18, "Adult",0)))
+
+dat %>% 
+  select(geoid) %>%
+  group_by(geoid) %>% 
+  summarise(n = n(), percent = (n/(length(unique(dat$pk))))*100) %>% 
+  arrange(desc(n))
+
+##No Data in TM Categories
+
+
+#Ages Listed
+dat %>% 
+  select(age) %>% 
+  filter(age >= 18) %>% 
+  group_by(age) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  view()
+
+#How does the living situation affect core needs?
+
+dat %>% 
+  select(cn_hs_1, cn_tr_1) %>% 
+  group_by(cn_tr_1) %>% 
+  filter(cn_hs_1 != "STDY_HSNG") %>% 
+  summarise(n = n())
+
+#Convert Scale to numeric
+factorise <- factorise <- function(x) {
+  case_when(x %in% c("NEVER", "NEVER_TRUE", "ZERO") ~ 0,
+            x %in% c("RARELY", "SMTM_TRUE", "ONE") ~ 1,
+            x %in% c("SOMETIMES", "OFTEN_TRUE", "TWO_OR_MORE") ~ 2,
+            x %in% c("FRLY_OFTN") ~ 3,
+            x %in% c("FREQUENTLY","ALWAYS") ~ 4)
+  
+}
+
+
+#Apply scale to each row
+dat$ii_2 <- sapply(dat$ii_2,factorise)
+dat$sn_ff_2 <- sapply(dat$sn_ff_2 ,factorise)
+dat$cn_sf_1 <- sapply(dat$cn_sf_1 ,factorise)
+dat$cn_sf_2 <- sapply(dat$cn_sf_2 ,factorise)
+dat$cn_sf_3 <- sapply(dat$cn_sf_3 ,factorise)
+dat$cn_sf_4 <- sapply(dat$cn_sf_4 ,factorise)
+
+
+###################### PLOT 1 Lonelyness related to Social Conflict in Children
+dat %>% 
+  filter(
+    Age_Description == "Child",
+    age > 5,
+    ii_1 != "OTHER",
+    sex != ""
+    ) %>% 
+  select(ii_1,
+         sn_ff_2,
+         cn_sf_1,
+         cn_sf_2,
+         cn_sf_3,
+         cn_sf_4,
+         age, 
+         sex) %>% 
+  mutate( sum = cn_sf_1 + 
+           cn_sf_2 + 
+           cn_sf_3 + 
+           cn_sf_4) %>%
+  ggplot(aes(x = sn_ff_2,
+             y = sum, color = sex)) +
+  geom_point() +
+  geom_jitter(width = .2, 
+              height = .15) +
+  geom_smooth(method = lm, se = F) +
+  labs(title = "Loneliness vs. Social Conflict",
+       subtitle = "In Children under 18",
+       x = "Lonliness", 
+       y = "Social Conflict") +
+  theme_bw()
+
+###################### PLOT 2 Lonelyness related to Social Conflict in all Ages
+dat %>% 
+  filter(#Age_Description == "Child",
+    age > 5,
+    ii_1 != "OTHER",
+    sex != "") %>% 
+  select(ii_1,
+         sn_ff_2,
+         cn_sf_1,
+         cn_sf_2,
+         cn_sf_3,
+         cn_sf_4,
+         age, 
+         sex) %>% 
+  mutate( sum = cn_sf_1 + 
+            cn_sf_2 + 
+            cn_sf_3 + 
+            cn_sf_4) %>%
+  ggplot(aes(x = sn_ff_2,
+             y = sum, color = sex)) +
+  geom_point() +
+  geom_jitter(width = .2, 
+              height = .15) +
+  geom_smooth(method = lm, se = F) +
+  labs(title = "Loneliness vs. Social Conflict",
+       subtitle = "In All Ages",
+       x = "Lonliness", 
+       y = "Social Conflict") +
+  theme_bw() 
+
+str(dat$sex)
+
+#Age and Lonelyness correlation?
+dat %>% 
+  select(age,
+         sn_ff_2) %>% 
+  ggplot(aes(x = age,
+             y = sn_ff_2)) +
+  geom_point() + 
+  geom_smooth(method = lm)
+
+
+#ER Visits vs Living situations?
+#dat$ii_2 <- factor(dat$ii_2, levels = c("ZERO", "ONE", "TWO_OR_MORE"))
+dat %>% 
+  select(ii_2, 
+         cn_hs_2_bug_infestation,
+         cn_hs_2_mold, 
+         cn_hs_2_lead_paint_pipes, 
+         cn_hs_2_inadq_heat, 
+         cn_hs_2_oven_not_wkg, 
+         cn_hs_2_smoke_det_not_wkg,
+         cn_hs_2_water_leaks, 
+         sex,
+         age,
+         Age_Description) %>% 
+  mutate(Danger = cn_hs_2_bug_infestation +
+         cn_hs_2_mold + 
+         cn_hs_2_lead_paint_pipes + 
+         cn_hs_2_inadq_heat + 
+         cn_hs_2_oven_not_wkg +
+         cn_hs_2_smoke_det_not_wkg +
+         cn_hs_2_water_leaks) %>% 
+  filter(Danger != 0,
+         sex != "") %>% 
+  ggplot(aes(x = ii_2, y = Danger, color = Age_Description)) +
+  geom_point() + 
+  geom_jitter(height = .1, width = .15) +
+  geom_smooth(method = "lm")
+
+
+#Set Levels for Wealth question
+dat$tm_6 <- factor(dat$tm_6, levels = c("LESS_THN_10K", 
+                                        "MORE_THN_10_LESS_THEN_15K", 
+                                        "MORE_THN_15_LESS_THEN_20K", 
+                                        "MORE_THN_20_LESS_THEN_25K", 
+                                        "MORE_THN_25_LESS_THEN_35K", 
+                                        "MORE_THN_35_LESS_THEN_50K",  
+                                        "MORE_THN_50_LESS_THEN_75K", 
+                                        "MORE_THN_75K"))
+
+
+#How does Income relate to Living situations?
+Income_Labs <- c("<$10 k","$10 k-$15 k", "$15 k-$20 k","$20 k-$25 k", "$25 k-$35 k","$35 k-$50 k", "$50 k-$75 k", ">$75 k" )
+
+
+###### Plot 3 Household income vs. Household Danger
+dat %>% 
+  select(tm_6, 
+         cn_hs_2_bug_infestation,
+         cn_hs_2_mold, 
+         cn_hs_2_lead_paint_pipes, 
+         cn_hs_2_inadq_heat, 
+         cn_hs_2_oven_not_wkg, 
+         cn_hs_2_smoke_det_not_wkg,
+         cn_hs_2_water_leaks, 
+         age,
+         Age_Description,
+         sex) %>% 
+  mutate(Danger = cn_hs_2_bug_infestation +
+           cn_hs_2_mold + 
+           cn_hs_2_lead_paint_pipes + 
+           cn_hs_2_inadq_heat + 
+           cn_hs_2_oven_not_wkg +
+           cn_hs_2_smoke_det_not_wkg +
+           cn_hs_2_water_leaks) %>% 
+  filter(Danger != 0, 
+         tm_6 != is.na(tm_6), 
+         age >= 18, 
+         sex != "") %>% 
+  ggplot(aes(x = tm_6, 
+             y = Danger)) +
+  geom_point() + 
+  geom_jitter(height = .1, width = .15) +
+  labs(title = "Household Income vs. Danger",
+       x = "Household Income", 
+       y = "Danger") +
+  scale_x_discrete(labels = Income_Labs) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 35, vjust = 0.4, hjust = .5)) 
+
+
+
+
+
+
+
+#Create column determining any hispanic/Latino origin
+dat <- dat %>% 
+  mutate( tm_Hispanic_Origin = tm_2_yes_anthr_hisp_lat_spn_origin +
+          tm_2_yes_cuban_origin +
+          tm_2_yes_mex_am_chicano_orgn +
+          tm_2_yes_puerto_rican)
+
+dat <- dat %>% 
+  mutate(Race = case_when(
+   # tm_Hispanic_Origin > 0 ~ "Hispanic/Latino",
+                               tm_3_amrcn_indn_alsk_ntv == 1 ~ "Native American/Alaska Native",
+                               tm_3_asian == 1 ~ "Asian",
+                               tm_3_blck_afrcn_amrcn == 1 ~ "Black/African American",
+                               tm_3_hwan_other_pcfc_islander == 1 ~ "Native Hawaiian/Other Pacific Islander",
+                               tm_3_white == 1 ~ "White"))
+
+
+#Ethnicity
+dat %>% 
+  select(Race) %>% 
+  group_by(Race) %>% 
+  summarise(reports = n())
+
+
+
+#Get population estimates from https://www.census.gov/data/tables/time-series/demo/popest/2010s-counties-detail.html
+pop_dat <- read_csv("State Population Data.csv")
+
+
+#format pop_dat for 2019 mesa county
+
+
+
+pop_dat <- pop_dat %>% 
+  filter(COUNTY == 77, YEAR == 12, AGEGRP == 0)
+
+
+
+
+pop_dat <- pop_dat %>% 
+  mutate(percent_Male = (TOT_MALE /TOT_POP)*100,
+         percent_Female = (TOT_FEMALE /TOT_POP)*100,
+         percent_White_Male = (WA_MALE / TOT_POP)*100,
+         percent_White_FEMALE = (WA_FEMALE / TOT_POP)*100,
+         percent_Black_Male = (BA_MALE / TOT_POP)*100,
+         percent_Black_FEMALE = (BA_FEMALE / TOT_POP)*100,
+         percent_American_Indian_Male = (IA_MALE / TOT_POP)*100,
+         percent_American_Indian_FEMALE = (IA_FEMALE / TOT_POP)*100,
+         percent_Asian_Male = (AA_MALE / TOT_POP)*100,
+         percent_Asian_FEMALE = (AA_FEMALE / TOT_POP)*100,
+         percent_Pacific_Islander_Male = (NA_MALE / TOT_POP)*100,
+         percent_Pacific_Islander_FEMALE = (NA_FEMALE / TOT_POP)*100,) %>%
+  select(-c(SUMLEV,STATE,STNAME,CTYNAME,YEAR,AGEGRP)) %>%
+  select(percent_Male,
+         percent_Female,
+         percent_White_Male,
+         percent_White_FEMALE,
+         percent_American_Indian_FEMALE,
+         percent_American_Indian_Male,
+         percent_Asian_FEMALE,percent_Asian_Male,
+         percent_Black_FEMALE,
+         percent_Black_Male,
+         percent_Pacific_Islander_FEMALE,
+         percent_Pacific_Islander_Male)
+
+pop_dat %>% 
+  select(percent_White_Male,
+         percent_White_FEMALE,
+         percent_American_Indian_FEMALE,
+         percent_American_Indian_Male,
+         percent_Asian_FEMALE,percent_Asian_Male,
+         percent_Black_FEMALE,
+         percent_Black_Male,
+         percent_Pacific_Islander_FEMALE,
+         percent_Pacific_Islander_Male) %>%
+  summarise(total = percent_White_Male +
+                percent_White_FEMALE +
+                percent_American_Indian_FEMALE +
+                percent_American_Indian_Male +
+                percent_Asian_FEMALE,percent_Asian_Male +
+                percent_Black_FEMALE +
+                percent_Black_Male +
+                percent_Pacific_Islander_FEMALE +
+                percent_Pacific_Islander_Male)
+
+
+
+Race_Count<- dat %>% 
+  select(Race) %>% 
+  filter( !is.na(Race)) %>% 
+  group_by(Race) %>% 
+  summarise(count = n()) %>% 
+  ungroup()
+
+Race_count_Total <- Race_Count %>%
+  summarise(total = sum(count))
+
+Race_Count <- Race_Count %>% 
+  mutate(Percent = Race_Count$count *100 / Race_count_Total$total)
+
+pop_dat %>% 
+  select(-percent_Male, -percent_Female) %>% 
+  pivot_longer(cols = everything()) %>% 
+  view()
+
+
+Race <- c("Asian", "Black/African American", "Native American/Alaska Native", "Native Hawaiian/Other Pacific Islander", "White")
+numbers <- c(pop_dat$percent_Asian_Male + pop_dat$percent_Asian_FEMALE, 
+             pop_dat$percent_Black_Male + pop_dat$percent_Black_FEMALE,
+             pop_dat$percent_American_Indian_Male + pop_dat$percent_American_Indian_FEMALE,
+             pop_dat$percent_Pacific_Islander_Male + pop_dat$percent_Pacific_Islander_FEMALE,
+             pop_dat$percent_White_Male + pop_dat$percent_White_FEMALE)
+
+
+County_Race <-data.frame(Race, numbers)
+
+##Table detailing racial representation within the county vs the survey
+
+Race_Table_FINAL <- left_join(Race_Count, County_Race, by = "Race") %>% 
+  select(-count) %>% 
+  rename( "Survey Representation" = Percent,  "County Represnetation" = numbers) %>% 
+  mutate_if(is.numeric, format, digits=3, nsmall = 0)
+
+
+
+
+
+```
+
+## Observations
+
+- Representation of Race in the Survey vs County
+
+- Lonlieness vs Social Discourse
+  + All ages
+  + Children
+
+- Income vs. Danger
+
+- Income vs Social Discourse
+
+
+## Racial Representation
+
+```{r Racial Table, echo=F}
+Race_Table_FINAL %>% 
+  kbl(.) %>% 
+  kable_styling(latex_options = "striped", position = "center")
+
+
+```
+- Native American/Alaskin Native appear over represented in these survey results
+
+County population data from https://www.census.gov/data/tables/time-series/demo/popest/2010s-counties-detail.html]
+
+
+## Lonelieness and Social Discourse
+<style>
+  .col2 {
+    columns: 2 200px;         /* number of columns and width in pixels*/
+    -webkit-columns: 2 200px; /* chrome, safari */
+    -moz-columns: 2 200px;    /* firefox */
+  }
+  .col3 {
+    columns: 3 100px;
+    -webkit-columns: 3 100px;
+    -moz-columns: 3 100px;
+  }
+</style>
+
+<div class="col2">
+ 
+   
+
+- Loneliness is reported by Supplemental Need Family & Community Support Answer
+- Lonileness is measured on a scale of 0-4
+  + [0] NEVER
+  + [1] RARELY
+  + [2] SOMETIMES
+  + [3] FAIRLY OFTEN
+  + [4] ALWAYS
+  
+  
+  
+- Social Discourse is measured out of a total of 16 by adding all of the Core Need Safety answers 1-4
+  + CN_SF_1-4 are measured by the following
+     - [0] NEVER
+     - [1] RARELY
+     - [2] SOMETIMES
+     - [3] FAIRLY OFTEN
+     - [4] FREQUENTLY
+
+</div>
+
+
+## Loneliness in all Ages
+<center>
+
+```{r Lonliness vs Social Discourse, echo=FALSE, message=FALSE, warning=FALSE, include=TRUE, paged.print=TRUE}
+dat %>% 
+  filter(
+    #Age_Description == "Child",
+    age > 5,
+    ii_1 != "OTHER",
+    sex != "") %>% 
+  select(ii_1,
+         sn_ff_2,
+         cn_sf_1,
+         cn_sf_2,
+         cn_sf_3,
+         cn_sf_4,
+         age, 
+         sex) %>% 
+  mutate( sum = cn_sf_1 + 
+            cn_sf_2 + 
+            cn_sf_3 + 
+            cn_sf_4) %>%
+  ggplot(
+    aes(x = sn_ff_2,
+        y = sum, 
+        color = sex)) +
+  geom_point() +
+  geom_jitter(width = .2, 
+              height = .15) +
+  geom_smooth(method = lm, se = F) +
+  labs(title = "Relationship Between Loneliness and Social Discourse",
+       x = "Level of Loneliness", 
+       y = "Social Conflict",
+       fill = "Sex") +
+  theme_bw() 
+```
+
+
+
+- People who report higher Social Discourse also report significantly higher loneliness
+
+</center>
+
+## Loneliness in Children (<18)
+
+```{r Loneliness vs Social Discourse, echo=FALSE, message=FALSE, warning=FALSE}
+dat %>% 
+  filter(
+    Age_Description == "Child",
+    age > 5,
+    ii_1 != "OTHER",
+    sex != ""
+    ) %>% 
+  select(ii_1,
+         sn_ff_2,
+         cn_sf_1,
+         cn_sf_2,
+         cn_sf_3,
+         cn_sf_4,
+         age, 
+         sex, 
+         Race) %>% 
+  mutate( sum = cn_sf_1 + 
+           cn_sf_2 + 
+           cn_sf_3 + 
+           cn_sf_4) %>%
+  ggplot(aes(x = sn_ff_2,
+             y = sum, color = sex)) +
+  geom_point() +
+  geom_jitter(width = .2, 
+              height = .15) +
+  geom_smooth(method = lm, se = F) +
+  labs(title = "Loneliness vs. Social Conflict",
+       subtitle = "In Children under 18",
+       x = "Lonliness", 
+       y = "Social Conflict") +
+  theme_bw()
+```
+
+- This trend appears to be similar
+- smaller data pool
+
+
+## Future Work
+
+
+
+- Loneliness may be important
+- Can this be predicted accurately?
+
+## How Does Wealth Relate to Household Dangers?
+
+<div class="col2">
+
+- Wealth is reported by Tell me About Yourself answer 6
+  + LESS_THN_10K; 
+  + MORE_THN_10_LESS_THEN_15K 
+  + MORE_THN_15_LESS_THEN_20K 
+  + MORE_THN_20_LESS_THEN_25K 
+  + MORE_THN_25_LESS_THEN_35K
+  + MORE_THN_35_LESS_THEN_50K 
+  + MORE_THN_50_LESS_THEN_75K
+  + MORE_THN_75K
+
+- Household Danger is measured out of a total of 7 by adding all of the Core Need Living Situation Answer 2
+
+- Do you have problems with? [1] Yes, [2] No
+  + Bug Infestation
+  + Mold
+  + Lead Paint
+  + Inadequit Heat
+  + Oven not Working
+  + Smoke Detector not Working
+  + Water Leaks
+  
+</div>
+
+## Household Wealth and Danger
+
+```{r Wealth, echo= F, message=FALSE, warning=FALSE}
+#########  Plot 3 Household Income vs. Household Danger in Adults (>17)
+dat %>% 
+  select(tm_6, 
+         cn_hs_2_bug_infestation,
+         cn_hs_2_mold, 
+         cn_hs_2_lead_paint_pipes, 
+         cn_hs_2_inadq_heat, 
+         cn_hs_2_oven_not_wkg, 
+         cn_hs_2_smoke_det_not_wkg,
+         cn_hs_2_water_leaks, 
+         age,
+         Age_Description,
+         sex,
+         Race) %>% 
+  mutate(Danger = cn_hs_2_bug_infestation +
+           cn_hs_2_mold + 
+           cn_hs_2_lead_paint_pipes + 
+           cn_hs_2_inadq_heat + 
+           cn_hs_2_oven_not_wkg +
+           cn_hs_2_smoke_det_not_wkg +
+           cn_hs_2_water_leaks) %>% 
+  filter(Danger != 0, 
+         tm_6 != is.na(tm_6), 
+         age >= 18, 
+         sex != "") %>% 
+  ggplot(aes(x = tm_6, 
+             y = Danger)) +
+  geom_point() + 
+  geom_jitter(height = .1, width = .15) +
+  labs(title = "Household Income vs. Danger",
+       x = "Household Income", 
+       y = "Danger") +
+  scale_x_discrete(labels = Income_Labs) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 35, vjust = 0.4, hjust = .5))
+
+```
+
+## How does Wealth and Social Conflict
